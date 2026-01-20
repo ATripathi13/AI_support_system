@@ -20,34 +20,6 @@ The system is intentionally **industry-agnostic** and demonstrates how AI can be
 
 The system is composed of **three independent but connected workflows**:
 
-# Living AI Support & Escalation System
-
-**Author:** Sam Anmol  
-**Email:** ORIGIN@AONXI.COM  
-**Deadline:** 20 January 2026  
-
----
-
-## Overview
-
-This project implements a **Living AI Support System** using **n8n** as the orchestration engine and **Gemini (LLM)** as the core intelligence layer. It simulates a scalable, production-grade support desk that:
-
-• Qualifies incoming user requests  
-• Uses a multi-agent AI Council for decision-making  
-• Automatically resolves simple issues  
-• Escalates complex or sensitive cases  
-• Logs all activity for optimization  
-• Self-improves using a feedback loop  
-• Dynamically generates new workflows on demand  
-
-The system is intentionally **industry-agnostic** and demonstrates how AI can be embedded into operational workflows with governance, human-in-the-loop safety, and continuous learning.
-
----
-
-## System Architecture
-
-The system is composed of **three independent but connected workflows**:
-
 User
 ↓
 [Core Support System]
@@ -76,18 +48,6 @@ Validation
 Human Approval
 ↓
 Registry
-
-
----
-
-## Architecture Diagram
-
-> Placeholder: `/docs/architecture.png`  
-> Placeholder: `/docs/architecture.drawio`
-
----
-
-## Repository Structure
 
 
 ---
