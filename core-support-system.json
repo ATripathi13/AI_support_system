@@ -1,0 +1,499 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I’m your AI support assistant. How can I help you today?",
+        "availableInChat": true,
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        880,
+        -192
+      ],
+      "name": "Chat Trigger",
+      "id": "a834441e-b972-483c-a309-83085cf243d0",
+      "webhookId": "564e3009-d213-45fc-a2be-92d99d8b13ad"
+    },
+    {
+      "parameters": {
+        "modelId": "models/gemini-2.5-flash",
+        "messages": {
+          "values": [
+            {
+              "content": "You are a support classifier. Return only JSON.",
+              "role": "model"
+            },
+            {
+              "content": "Classify: Billing, Technical, or General.\nReturn:\n{\"category\":\"\",\"urgency\":0,\"confidence\":0,\"short_summary\":\"\"}\n\nUser issue:\n{{$json.text}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        -192
+      ],
+      "name": "Gemini Classifier",
+      "id": "9d5816f1-4b76-417e-a3dc-d2c814e0308c",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jUvrQZjXBKbBhWGi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw=$json.content.parts[0].text.replace(/```json|```/g,'').trim(); const p=JSON.parse(raw); return [{json:{...p, original_message: $json.text}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        -192
+      ],
+      "name": "Parse Classification",
+      "id": "fccf4680-4fea-4015-b3d8-9b8fa956343c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "81abcdc5-5b4e-47e1-b2c1-8d8773fa20b1",
+              "leftValue": "={{$json.escalate}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2432,
+        -288
+      ],
+      "id": "bd5a358d-2d2b-467a-a3aa-1dfb8e1a6e63",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.slack.com/services/YOUR/WEBHOOK",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🚨 New Escalation\\nCategory: {{$json.category}}\\nPriority: {{$json.priority}}\\nReason: {{$json.reason}}\\nMessage: {{$json.original_message}}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2656,
+        -304
+      ],
+      "id": "5cdde4b8-28d1-4752-b4a5-7f6821df4f91",
+      "name": "Slack"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/tickets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"properties\": {\n    \"subject\": \"AI Escalated Support Case\",\n    \"content\": \"{{$json.original_message}}\",\n    \"priority\": \"{{$json.priority}}\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2880,
+        -304
+      ],
+      "id": "e873d1cb-d23d-466e-9b40-1f26d8a78ad7",
+      "name": "Hubspot",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "6Lv2NKcu46b9PCOg",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI support understanding agent.\nYour job is to deeply understand what the user is really asking.\nSummarize the real intent in 1–2 lines.\n",
+              "role": "model"
+            },
+            {
+              "content": "=User message: {{$json.original_message}}\nCategory: {{$json.category}}\nUrgency: {{$json.urgency}}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        -368
+      ],
+      "id": "7a765dc9-90c5-4296-8575-e3d6d68efd16",
+      "name": "AI Council — Understanding Agent",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jUvrQZjXBKbBhWGi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI support resolution agent.\nYour job is to decide how to best help the user.\n\nIf the issue can be handled automatically:\n- Write the full reply to the user.\n\nIf it needs a human:\n- Explain what the human should do.\n",
+              "role": "model"
+            },
+            {
+              "content": "=User message: {{$json.original_message}}\nCategory: {{$json.category}}\nUrgency: {{$json.urgency}}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        -192
+      ],
+      "id": "3794272a-2286-4768-9bb9-89d021bf6653",
+      "name": "AI Council — Resolution Agent",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jUvrQZjXBKbBhWGi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function cleanAndParse(text) {\n  if (!text) return null;\n  const cleaned = text.replace(/```json|```/g, \"\").trim();\n  try {\n    return JSON.parse(cleaned);\n  } catch (e) {\n    return null;\n  }\n}\n\n// Extract merged inputs\nconst understandingRaw = $input.first().json.content?.parts?.[0]?.text || \"\";\nconst resolutionRaw = $input.all()[1]?.json.content?.parts?.[0]?.text || \"\";\nconst escalationRaw = $input.all()[2]?.json.content?.parts?.[0]?.text || \"\";\n\n// Parse escalation JSON\nconst escalation = cleanAndParse(escalationRaw) || {\n  escalate: false,\n  priority: \"low\",\n  reason: \"No escalation triggered\"\n};\n\n// Build final response\nlet finalReply = escalation.escalate\n  ? `🚨 Your issue has been escalated.\\nPriority: ${escalation.priority}\\nReason: ${escalation.reason}`\n  : resolutionRaw || \"Thanks! Your issue has been resolved.\";\n\n// Return streaming-compatible output\nreturn [{\n  json: {\n    understanding: understandingRaw,\n    resolution: resolutionRaw,\n    escalate: escalation.escalate,\n    priority: escalation.priority,\n    reason: escalation.reason,\n    response: finalReply   // REQUIRED for streaming\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        -192
+      ],
+      "id": "068ec0cc-e080-4e56-b588-b9a786481941",
+      "name": "AI Council Combiner"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2080,
+        -208
+      ],
+      "id": "69ac0be7-ddc1-4ff6-8819-0b5920042c4b",
+      "name": "Merge AI Council"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "=",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3024,
+        -96
+      ],
+      "id": "26d058a2-d6f1-4083-88f9-01da9623a345",
+      "name": "Log Support Metrics",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DYECCOYz6fbPYzXR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c35456a1-5cf0-4575-92bf-487d045a6945",
+              "leftValue": "={{$json.original_message}}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2784,
+        80
+      ],
+      "id": "2c36b3f8-bcde-41c4-8e1a-8d9da24d204e",
+      "name": "Is Generator Command?"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are an AI escalation decision agent.\n\nEscalate ONLY if:\n- The issue involves billing, payments, refunds\n- The user cannot access a service (login, outage)\n- The user is angry, urgent, or demands a human\n- There is legal, security, or account risk\n\nDo NOT escalate:\n- Informational questions\n- FAQs\n- Simple how-to questions\n- Feature inquiries\n\nBe conservative.\n",
+              "role": "model"
+            },
+            {
+              "content": "=User message: {{$json.original_message}}\nCategory: {{$json.category}}\nUrgency: {{$json.urgency}}\n\nReturn ONLY valid JSON:\n\n{\n  \"escalate\": true or false,\n  \"priority\": \"low\" or \"medium\" or \"high\",\n  \"reason\": \"\"\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        0
+      ],
+      "id": "a4ccbbde-a2ca-4196-9ea8-dec8c15b76f6",
+      "name": "AI Council — Escalation Agent",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jUvrQZjXBKbBhWGi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gemini Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Classifier": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          {
+            "node": "AI Council — Understanding Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Council — Resolution Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Council — Escalation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Support Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack": {
+      "main": [
+        [
+          {
+            "node": "Hubspot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hubspot": {
+      "main": [
+        [
+          {
+            "node": "Log Support Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Council — Understanding Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Council",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Council — Resolution Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Council",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Council Combiner": {
+      "main": [
+        [
+          {
+            "node": "Is Generator Command?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge AI Council": {
+      "main": [
+        [
+          {
+            "node": "AI Council Combiner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Council — Escalation Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge AI Council",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6536b13c8111a267a59381ec37a1619ad1d1752c8ccfd022c77fb3aa942d8660"
+  }
+}

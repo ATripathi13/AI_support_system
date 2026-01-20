@@ -1,0 +1,233 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a workflow generator.\n\nYour job is to generate valid n8n workflow JSON based on a natural language request.\n\nRules:\n- Return ONLY JSON\n- No markdown\n- No explanation\n- Must be syntactically valid\n",
+              "role": "model"
+            },
+            {
+              "content": "=Generate an n8n workflow JSON for the following request:\n\n{{$json.generator_request}}\n\nThe workflow should be simple, modular, and scalable.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        704
+      ],
+      "id": "f7ee2b43-4109-48c6-b885-a703397dcabe",
+      "name": "Workflow Generator Agent",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jUvrQZjXBKbBhWGi",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const raw = $json.content.parts[0].text;\n  const cleaned = raw.replace(/```json|```/g, \"\").trim();\n  const parsed = JSON.parse(cleaned);\n\n  if (!parsed.nodes || !parsed.connections) {\n    throw new Error(\"Missing nodes or connections\");\n  }\n\n  return [{\n    json: {\n      valid: true,\n      generated_workflow: parsed\n    }\n  }];\n} catch (e) {\n  return [{\n    json: {\n      valid: false,\n      error: e.message,\n      raw_output: $json.content.parts[0].text\n    }\n  }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        704
+      ],
+      "id": "8febcb7e-1972-4f92-abf4-d15ec31952b6",
+      "name": "Validate Generated Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "acc8c990-a3fc-4ddb-8109-bd72eca38213",
+              "leftValue": "={{$json.valid}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1856,
+        704
+      ],
+      "id": "30f154e8-53d5-4a48-b791-788f3931d8d2",
+      "name": "Approve Generated Workflow?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"🧩 New Workflow Generated\\n\\nPlease review and approve:\\n\\n{{$json.generated_workflow}}\\n\\nReply APPROVE or REJECT.\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2208,
+        656
+      ],
+      "id": "f8e00cdc-31c1-431d-9b28-376ceab52216",
+      "name": "Slack — Workflow Approval Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2480,
+        656
+      ],
+      "id": "0c799882-97d4-4f37-8829-551d27ceeaef",
+      "name": "Workflow Registry",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DYECCOYz6fbPYzXR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    ...$json,\n    deployment_status: \"Simulated\",\n    deployed_at: new Date().toISOString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        656
+      ],
+      "id": "ad636890-74de-4723-8d3e-04e7903d052b",
+      "name": "Simulate Deployment"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    response: \"✅ Your workflow has been approved and deployed successfully (simulation).\",\n    ...$json\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        656
+      ],
+      "id": "45744286-baa5-432f-bdfb-47940cc69a27",
+      "name": "Deployment Response Builder"
+    }
+  ],
+  "connections": {
+    "Workflow Generator Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate Generated Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Generated Workflow": {
+      "main": [
+        [
+          {
+            "node": "Approve Generated Workflow?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approve Generated Workflow?": {
+      "main": [
+        [
+          {
+            "node": "Slack — Workflow Approval Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack — Workflow Approval Request": {
+      "main": [
+        [
+          {
+            "node": "Workflow Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Registry": {
+      "main": [
+        [
+          {
+            "node": "Simulate Deployment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate Deployment": {
+      "main": [
+        [
+          {
+            "node": "Deployment Response Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6536b13c8111a267a59381ec37a1619ad1d1752c8ccfd022c77fb3aa942d8660"
+  }
+}
