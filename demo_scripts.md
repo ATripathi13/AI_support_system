@@ -10,7 +10,9 @@ This demo showcases an end-to-end intelligent support workflow that:
 • Makes escalation decisions  
 • Logs metrics  
 • Self-optimizes  
-• Generates workflows dynamically  
+• Generates workflows dynamically
+
+**Provides real time user growth**
 
 This demonstrates **decision intelligence**, **automation**, **AI governance**, and **scalable system design**.
 
