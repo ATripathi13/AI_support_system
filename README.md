@@ -52,10 +52,10 @@ Registry
 
 ---
 
-## Architecture Diagram
+<!-- ## Architecture Diagram
 
 > Placeholder: `/docs/architecture.png`  
-> Placeholder: `/docs/architecture.drawio`
+> Placeholder: `/docs/architecture.drawio` -->
 
 ---
 
@@ -293,10 +293,10 @@ Deployment | JSON exports
 
 ---
 
-## Live Prototype
+<!-- ## Live Prototype
 
 > Placeholder: Public n8n URL  
-> Placeholder: Demo video  
+> Placeholder: Demo video  -->
 
 ---
 
