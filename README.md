@@ -83,7 +83,7 @@ AI-Living-Support-System/
 
 ## Workflow 1: Core Support System
 
-### Purpose
+### Purpose:
 Handles real-time chat interactions, classifies issues, consults AI agents, and decides whether to auto-resolve or escalate.
 
 ---
