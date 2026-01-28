@@ -19,7 +19,7 @@ The system is intentionally **industry-agnostic** and demonstrates how AI can be
 ## System Architecture
 
 The system is composed of **three independent but connected workflows**:
-
+```bash
 User
 ↓
 [Core Support System]
@@ -48,7 +48,7 @@ Validation
 Human Approval
 ↓
 Registry
-
+```
 
 ---
 
@@ -60,7 +60,7 @@ Registry
 ---
 
 ## Repository Structure
-
+```bash
 AI-Living-Support-System/
 ├── exports/
 │ ├── core-support-system.json
@@ -77,7 +77,7 @@ AI-Living-Support-System/
 └── docs/
 ├── architecture.txt
 └── system-thinking.md
-
+```
 
 ---
 
@@ -89,7 +89,7 @@ Handles real-time chat interactions, classifies issues, consults AI agents, and 
 ---
 
 ### End-to-End Flow
-
+```bash
 User
 ↓
 Chat Trigger (Streaming)
@@ -112,7 +112,7 @@ Decision Brain
 Slack / HubSpot (placeholder)
 ↓
 Google Sheets Logging
-
+```
 
 
 ---
@@ -188,7 +188,7 @@ Allows the system to **create new workflows on demand** using AI.
 ---
 
 ### Flow
-
+```bash
 User Command
 ↓
 Generator Agent
@@ -202,7 +202,7 @@ Human Approval
 Registry
 ↓
 Deployment Simulation
-
+```
 
 ---
 
